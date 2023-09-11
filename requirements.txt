@@ -1,0 +1,8 @@
+# Production dependencies
+pycoshark
+
+# Development dependencies
+pytest
+flake8
+black
+pylint
