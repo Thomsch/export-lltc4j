@@ -14,4 +14,4 @@ format-python:
 	black ${PYTHON_FILES}
 
 python-test:
-	PYTHONPATH="${MAKEFILE_DIR}" pytest
+	PYTHONPATH="${MAKEFILE_DIR}" pytest src/python/test
