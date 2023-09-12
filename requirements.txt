@@ -1,5 +1,6 @@
 # Production dependencies
 pycoshark
+mongoengine
 
 # Development dependencies
 pytest
