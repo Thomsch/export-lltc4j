@@ -18,6 +18,45 @@ CSV format:
 - ground_truth: The manual labelling for this commit.
 """
 import sys
+from mongoengine import connect, disconnect_all
+from pycoshark.mongomodels import (
+    Project,
+    VCSSystem,
+    Commit,
+    FileAction,
+    Hunk,
+    Refactoring,
+    IssueSystem,
+    Issue,
+    IssueComment,
+    MailingList,
+    Message,
+)
+from pycoshark.utils import create_mongodb_uri_string
+
+
+def connect_to_db():
+    """
+    Connect to the smartshark database or throws an error.
+    """
+    credentials = {
+        "db_user": "",
+        "db_password": "",
+        "db_hostname": "localhost",
+        "db_port": 27017,
+        "db_authentication_database": "",
+        "db_ssl_enabled": False,
+    }
+
+    uri = create_mongodb_uri_string(**credentials)
+    connect("smartshark_2_2", host=uri, alias="default")
+
+    if Project.objects(name="giraph").get():
+        print("Connected to database")
+    else:
+        raise Exception(
+            "Connection to database failed. Please check your credentials in the script and that the mongod is running."
+        )
 
 
 def main():
@@ -30,7 +69,7 @@ def main():
         print(f"usage: python3 {sys.argv[0]}")
         sys.exit(1)
 
-    print("All done")
+    connect_to_db()
 
 
 if __name__ == "__main__":
