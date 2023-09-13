@@ -22,19 +22,13 @@ CSV format:
 - ground_truth: The manual labelling for this commit.
 """
 import sys
-from mongoengine import connect, disconnect_all
+from mongoengine import connect
 from pycoshark.mongomodels import (
     Project,
     VCSSystem,
     Commit,
     FileAction,
     Hunk,
-    Refactoring,
-    IssueSystem,
-    Issue,
-    IssueComment,
-    MailingList,
-    Message,
 )
 from pycoshark.utils import create_mongodb_uri_string
 
@@ -119,17 +113,16 @@ def main():
             if (
                 commit.labels is not None
                 and "validated_bugfix" in commit.labels
-                and commit.labels["validated_bugfix"] == True
+                and commit.labels["validated_bugfix"]
                 and len(commit.parents) == 1
             ):
                 print(f"{vcs_system.url},{commit.revision_hash},{commit.parents[0]}")
-
 
                 for fa in FileAction.objects(commit_id=commit.id):
                     print(f"FileAction: {fa.induces}")
                     print(f"Line added: {fa.lines_added}")
                     print(f"Line deleted: {fa.lines_deleted}")
-                    
+
                     for hunk in Hunk.objects(file_action_id=fa.id):
                         print(f"Content:\n{hunk.content}")
                         print(f"New start: {hunk.new_start}")
@@ -138,7 +131,7 @@ def main():
                         print(f"Old lines: {hunk.old_lines}")
                         # print(f"Verified{hunk.lines_manual}")
                         print(f"Verified{hunk.lines_verified}")
-            
+
 
 if __name__ == "__main__":
     main()
