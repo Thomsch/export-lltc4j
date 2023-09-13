@@ -125,5 +125,20 @@ def main():
                 print(f"{vcs_system.url},{commit.revision_hash},{commit.parents[0]}")
 
 
+                for fa in FileAction.objects(commit_id=commit.id):
+                    print(f"FileAction: {fa.induces}")
+                    print(f"Line added: {fa.lines_added}")
+                    print(f"Line deleted: {fa.lines_deleted}")
+                    
+                    for hunk in Hunk.objects(file_action_id=fa.id):
+                        print(f"Content:\n{hunk.content}")
+                        print(f"New start: {hunk.new_start}")
+                        print(f"New lines: {hunk.new_lines}")
+                        print(f"Old start: {hunk.old_start}")
+                        print(f"Old lines: {hunk.old_lines}")
+                        # print(f"Verified{hunk.lines_manual}")
+                        print(f"Verified{hunk.lines_verified}")
+            
+
 if __name__ == "__main__":
     main()
