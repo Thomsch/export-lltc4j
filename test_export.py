@@ -2,21 +2,20 @@
 Regression tests for the export script.
 """
 
-import subprocess
+from mongoengine import connect
+
+from export_lltc4j_utb import print_commits
 
 
-def test_no_arguments():
+def test_no_arguments(capsys):
     """
     Tests that export script doesn't take any parameters and finishes correctly.
     """
 
-    # Run the script with no arguments and capture the output
-    result = subprocess.run(
-        ["python", "export_lltc4j_utb.py"], capture_output=True, text=True
-    )
+    connect("mongoenginetest", host="mongomock://localhost", alias="default")
 
-    # Check that the exit code is 0, indicating success
-    assert result.returncode == 0
+    print_commits()
 
-    # Check that the output contains "All done"
-    assert "Connected to database" in result.stderr
+    captured = capsys.readouterr()
+
+    assert "project_name,vcs_url,commit_hash,parent_hash" in captured.out
