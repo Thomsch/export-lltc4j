@@ -19,4 +19,4 @@ def test_no_arguments():
     assert result.returncode == 0
 
     # Check that the output contains "All done"
-    assert "Connected to database" in result.stdout
+    assert "Connected to database" in result.stderr

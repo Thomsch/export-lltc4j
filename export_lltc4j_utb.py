@@ -27,8 +27,6 @@ from pycoshark.mongomodels import (
     Project,
     VCSSystem,
     Commit,
-    FileAction,
-    Hunk,
 )
 from pycoshark.utils import create_mongodb_uri_string
 
@@ -80,11 +78,55 @@ def connect_to_db():
     connect("smartshark_2_2", host=uri, alias="default")
 
     if Project.objects(name="giraph").get():
-        print("Connected to database")
+        print("Connected to database", file=sys.stderr)
     else:
         raise Exception(
             "Connection to database failed. Please check your credentials in the script and that the mongod is running."
         )
+
+
+def print_commits():
+    """
+    Print the commits in the LLTC4J dataset on stdout.
+    The format is the following:
+    - project_name: Name of the project.
+    - vcs_url: URL of the VCS
+    - commit_hash: Hash of the commit.
+    - parent_hash: Hash of the parent commit.
+    """
+    print("project_name,vcs_url,commit_hash,parent_hash")
+
+    project_ids = []
+    for project in Project.objects(name__in=PROJECTS):
+        project_ids.append(project.id)
+
+    for vcs_system in VCSSystem.objects(
+        project_id__in=project_ids, repository_type="git"
+    ):
+        for commit in Commit.objects(vcs_system_id=vcs_system.id):
+            if (
+                commit.labels is not None
+                and "validated_bugfix" in commit.labels
+                and commit.labels["validated_bugfix"]
+                and len(commit.parents) == 1
+            ):
+                print(
+                    f"{project.name},{vcs_system.url},{commit.revision_hash},{commit.parents[0]}"
+                )
+
+                # for fa in FileAction.objects(commit_id=commit.id):
+                #     print(f"FileAction: {fa.induces}")
+                #     print(f"Line added: {fa.lines_added}")
+                #     print(f"Line deleted: {fa.lines_deleted}")
+
+                #     for hunk in Hunk.objects(file_action_id=fa.id):
+                #         print(f"Content:\n{hunk.content}")
+                #         print(f"New start: {hunk.new_start}")
+                #         print(f"New lines: {hunk.new_lines}")
+                #         print(f"Old start: {hunk.old_start}")
+                #         print(f"Old lines: {hunk.old_lines}")
+                #         # print(f"Verified{hunk.lines_manual}")
+                #         print(f"Verified{hunk.lines_verified}")
 
 
 def main():
@@ -98,39 +140,7 @@ def main():
         sys.exit(1)
 
     connect_to_db()
-
-    print("vcs_url,commit_hash,parent_hash")
-
-    project_ids = []
-    for project in Project.objects(name__in=PROJECTS):
-        project_ids.append(project.id)
-
-    for vcs_system in VCSSystem.objects(
-        project_id__in=project_ids, repository_type="git"
-    ).limit(1):
-        print(f"Processing {vcs_system.url}")
-        for commit in Commit.objects(vcs_system_id=vcs_system.id):
-            if (
-                commit.labels is not None
-                and "validated_bugfix" in commit.labels
-                and commit.labels["validated_bugfix"]
-                and len(commit.parents) == 1
-            ):
-                print(f"{vcs_system.url},{commit.revision_hash},{commit.parents[0]}")
-
-                for fa in FileAction.objects(commit_id=commit.id):
-                    print(f"FileAction: {fa.induces}")
-                    print(f"Line added: {fa.lines_added}")
-                    print(f"Line deleted: {fa.lines_deleted}")
-
-                    for hunk in Hunk.objects(file_action_id=fa.id):
-                        print(f"Content:\n{hunk.content}")
-                        print(f"New start: {hunk.new_start}")
-                        print(f"New lines: {hunk.new_lines}")
-                        print(f"Old start: {hunk.old_start}")
-                        print(f"Old lines: {hunk.old_lines}")
-                        # print(f"Verified{hunk.lines_manual}")
-                        print(f"Verified{hunk.lines_verified}")
+    print_commits()
 
 
 if __name__ == "__main__":

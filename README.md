@@ -1,12 +1,17 @@
-# Using the SmartSHARK Database Release
+# Line-Labelled Tangled Commits for Java exporter
+This project exports the Line-Labelled Tangled Commits for Java (LLTC4J) dataset to the untangling tool evaluation framework.
 
-This repository explains how to use our database releases such that you can create your own analysis scripts. Below, we descripe how our data can be loaded and how to run a sample analysis in Python with [Jupyter Lab](https://jupyter.org/install). 
+The size of the database where the LLTC4J dataset is 250GB on the "small" version which makes working with this dataset on personal laptop prohibitive. This script exports only the necessary data to evluate the untangling tool.
 
-## Preparation of the Database
+This script exports the list of commit hashes that have been manually validated to fix a bug (1) and have their changed lines labelled manually (2).
+
+## Installation
+
+### Preparation of the Database
 
 First, you need to prepare a local database for analysis. 
 
-- Download a release of the SmartSHARK MongoDB. [You can find a list of releases on our Website](https://smartshark.github.io/dbreleases/). We recommend to always use the latest release. 
+- Download a release of the SmartSHARK MongoDB. [You can find a list of releases on the website of the database's authors](https://smartshark.github.io/dbreleases/). We recommend to always use the latest release. 
 - Then, you must prepare the MongoDB instance where you want to host the data. A guide on how to setup a fresh MognoDB can be found [here](https://docs.mongodb.com/manual/installation/#install-mongodb).
 - Run [mongorestore](https://docs.mongodb.com/database-tools/mongorestore/) to load the data into your local database.
 
@@ -25,19 +30,21 @@ sudo systemctl start mongod
 mongorestore --gzip --archive=smartshark_1_0.agz
 ```
 
-## Running the Notebook
-
-To run our [sample analysis](https://github.com/smartshark/usage-examples/blob/main/Example-Notebook.ipynb), you only need our library [pycoshark](https://github.com/smartshark/pycoSHARK) and [Jupyter Lab](https://jupyter.org/install) (or any other app, that can work with Jupyter Notebooks). 
-
-For example, you could run the following commands in your Ubuntu 18.04 machine to get everything running.
+### Preparing the python environment
+We recommend using a virtual environment.
 
 ```
 sudo apt-get install python3-venv build-essential python3-dev
-git clone https://github.com/smartshark/usage-examples
-cd usage-examples/
-python3 -m venv venv
-source venv/bin/activate
-pip install pycoshark jupyterlab
+git clone https://github.com/Thomsch/export_lltc4j
+cd export_lltc4j/
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-You can just open the notebook in the browser and run our example.
+## Usage
+To run the exporter, run the following:
+
+```
+python3 export_lltc4j_utb.py > lltc4j_commits.csv
+```
