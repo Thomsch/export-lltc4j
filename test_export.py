@@ -3,10 +3,11 @@ Regression tests for the export script.
 """
 
 from mongoengine import connect
+import mongomock
 
-from export_lltc4j_utb import print_commits
+from export_lltc4j_utb import export_commit_hashes
 
-
+@mongomock.patch(servers=(('localhost', 27017),))
 def test_no_arguments(capsys):
     """
     Tests that export script doesn't take any parameters and finishes correctly.
@@ -14,7 +15,7 @@ def test_no_arguments(capsys):
 
     connect("mongoenginetest", host="mongomock://localhost", alias="default")
 
-    print_commits()
+    export_commit_hashes()
 
     captured = capsys.readouterr()
 
