@@ -101,12 +101,14 @@ def export_commit_hashes():
     print("project_name,vcs_url,commit_hash,parent_hash")
 
     project_ids = []
+
     for project in Project.objects(name__in=PROJECTS):
         project_ids.append(project.id)
 
     for vcs_system in VCSSystem.objects(
         project_id__in=project_ids, repository_type="git"
     ):
+        project = Project.objects(id=vcs_system.project_id).get()
         for commit in Commit.objects(vcs_system_id=vcs_system.id):
             if (
                 commit.labels is not None
