@@ -1,6 +1,8 @@
 # Production dependencies
 pycoshark
 mongoengine
+pandas
+tqdm
 
 # Development dependencies
 pytest
