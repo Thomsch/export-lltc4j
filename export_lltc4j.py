@@ -12,24 +12,17 @@ The following artifacts are exported:
       lines changing the code are included.
 
 The commit exported have the following properties:
-- The commit is labelled as a bugfix by developers and researchers.
-- The commit has only one parent. This is to avoid ambiguity where we don't know which parent was diffed against to manually label the lines.
-- The commit contains at least one code change. Documentation, tests, and whitespace related changes are ignored.
+    - The commit is labelled as a bugfix by developers and researchers.
+    - The commit has only one parent. This is to avoid ambiguity where we don't know which parent was diffed against to manually label the lines.
+    - The commit contains at least one code change. Documentation, tests, and whitespace related changes are ignored.
 
 References:
 1. Herbold, Steffen, et al. "A fine-grained data set and analysis of tangling in bug fixing commits." Empirical Software Engineering 27.6 (2022): 125.
 
 Arguments:
-- --outdir. Specify the output directory for the script results 
-- The --projects argument is optional. By default, all projects are exported.
-- The --number argument is optional. By default, all commits are exported.
-
-Output:
-The VCS url, commit hash and labelled lines are outputed on stdout with the folowing
-CSV format:
-- vcs_url: URL of the VCS
-- commit_hash: Hash of the commit.
-- ground_truth: The manual labelling for this commit.
+    --outdir. Required argument to specify where to put the export results.
+    --projects. Optional argument to specify which projects to export. By default, all projects are exported.
+    --number. Optional argument to specify how many commits to export. By default, all commits are exported.
 """
 
 import argparse
