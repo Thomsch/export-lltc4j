@@ -2,6 +2,7 @@
 Regression tests for the export script.
 """
 
-from mongoengine import connect
-import mongomock
 
+def test_dummy():
+    """Dummy test"""
+    assert True

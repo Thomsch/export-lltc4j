@@ -28,6 +28,7 @@ Arguments:
 import argparse
 import os
 import sys
+from typing import List
 from mongoengine import connect
 from pycoshark.mongomodels import (
     Project,
@@ -39,7 +40,6 @@ from pycoshark.mongomodels import (
 )
 from pycoshark.utils import create_mongodb_uri_string
 from tqdm import tqdm
-from typing import List
 import pandas as pd
 
 PROJECTS = [
@@ -202,6 +202,7 @@ def export_ground_truth_for_commit(commit) -> pd.DataFrame:
         if len(file_frames) == 0:
             return None
         return pd.concat(file_frames)
+    return None
 
 
 def export_lltc4j(out_dir: str, projects: List[str], number: int):
@@ -237,7 +238,7 @@ def export_lltc4j(out_dir: str, projects: List[str], number: int):
     """
 
     early_exit = False
-    counter = 0
+    exported_commits_counter = 0
     commits_hashes = []
 
     for project in Project.objects(name__in=projects):
@@ -245,7 +246,7 @@ def export_lltc4j(out_dir: str, projects: List[str], number: int):
         vcs_system = VCSSystem.objects(project_id=project.id).get()
         for commit in tqdm(Commit.objects(vcs_system_id=vcs_system.id), desc="Commits"):
             # Early exit if we have processed enough commits.
-            if number is not None and counter >= number:
+            if number is not None and exported_commits_counter >= number:
                 early_exit = True
                 break
 
@@ -272,7 +273,7 @@ def export_lltc4j(out_dir: str, projects: List[str], number: int):
                 commits_hashes.append(
                     (vcs_system.url, commit.revision_hash, commit.parents[0])
                 )
-                counter += 1
+                exported_commits_counter += 1
 
         if early_exit:
             break
@@ -283,7 +284,7 @@ def export_lltc4j(out_dir: str, projects: List[str], number: int):
     commit_hashes_file = os.path.join(out_dir, "lltc4j-commits.csv")
     commits_hashes_df.to_csv(commit_hashes_file, index=False)
 
-    print(f"Processed {counter} commits.", file=sys.stderr)
+    print(f"Processed {exported_commits_counter} commits.", file=sys.stderr)
 
 
 def main():
