@@ -29,6 +29,7 @@ import argparse
 import os
 import sys
 from typing import List
+
 from mongoengine import connect
 from pycoshark.mongomodels import (
     Project,
@@ -84,9 +85,9 @@ LINE_LABELS = [
     "whitespace",
     "no_bugfix",
 ]
-LINE_LABELS_CODE = ["bugfix", "refactoring", "unrelated", "no_bugfix"]
 LINE_LABELS_CODE_FIX = ["bugfix"]
 LINE_LABELS_CODE_NO_FIX = ["refactoring", "unrelated", "no_bugfix"]
+LINE_LABELS_CODE = LINE_LABELS_CODE_FIX + LINE_LABELS_CODE_NO_FIX
 
 
 def connect_to_db():
@@ -144,7 +145,7 @@ def label_lines(hunks: List[Hunk]) -> pd.DataFrame:
                 if hunk_content_by_line[i].startswith("-"):
                     source_line_number = hunk.old_start + i
                 elif hunk_content_by_line[i].startswith("+"):
-                    target_line_number = hunk.new_start + i
+                    target_line_number = hunk.new_start + i - hunk.old_lines
                 else:
                     # Context line. Nothing to do.
                     continue
