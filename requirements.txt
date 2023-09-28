@@ -9,4 +9,3 @@ pytest
 flake8
 black
 pylint
-mongomock
