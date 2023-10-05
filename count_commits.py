@@ -42,7 +42,7 @@ def count_commits(dir: str):
     - dir: Root directory where the CSV ground truth is.
     """
 
-    total_files = 0
+    total_truth_files = 0
     bugfix_files = 0
     empty_files = 0
     non_bugfix_files = 0
@@ -50,7 +50,7 @@ def count_commits(dir: str):
     for root, _, files in os.walk(dir):
         for file in files:
             if file == "truth.csv":
-                total_files += 1
+                total_truth_files += 1
                 truth_file = os.path.join(root, file)
                 df = pd.read_csv(truth_file, header=0)
                 change_type = get_change_type(df)
@@ -64,7 +64,7 @@ def count_commits(dir: str):
                 elif change_type == "mixed":
                     mixed_changes_files += 1
 
-    print(f"Visited {total_files} truth.csv files")
+    print(f"Visited {total_truth_files} truth.csv files")
     print(f"Found {empty_files} empty truth.csv files")
     print(f"Found {bugfix_files} files with only bugfix changes.")
     print(f"Found {non_bugfix_files} files with only non-bugfix changes.")
