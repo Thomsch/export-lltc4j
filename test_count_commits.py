@@ -11,7 +11,7 @@ def test_get_change_type_empty():
     """
     Test get_change_type() with an empty dataframe.
     """
-    df = pd.DataFrame(columns=["file","source", "target", "group"])
+    df = pd.DataFrame(columns=["file", "source", "target", "group"])
     assert get_change_type(df) == "empty"
 
 
@@ -24,9 +24,10 @@ def test_get_change_type_bugfix():
             ("file1", 7, None, "bugfix"),
             ("file1", 42, None, "bugfix"),
         ],
-        columns=["file","source", "target", "group"],
+        columns=["file", "source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
     assert get_change_type(df) == "bugfix"
+
 
 def test_get_change_type_nonbugfix():
     """
@@ -37,9 +38,10 @@ def test_get_change_type_nonbugfix():
             ("file1", None, 7, "nonbugfix"),
             ("file1", None, 42, "nonbugfix"),
         ],
-        columns=["file","source", "target", "group"],
+        columns=["file", "source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
     assert get_change_type(df) == "nonbugfix"
+
 
 def test_get_change_type_mixed():
     """
@@ -50,7 +52,7 @@ def test_get_change_type_mixed():
             ("file1", 7, None, "bugfix"),
             ("file1", None, 42, "nonbugfix"),
         ],
-        columns=["file","source", "target", "group"],
+        columns=["file", "source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
     assert get_change_type(df) == "mixed"
 
@@ -66,7 +68,7 @@ def test_get_change_type_unknown():
             ("file1", 7, None, "unknown"),
             ("file1", None, 42, "unknown"),
         ],
-        columns=["file","source", "target", "group"],
+        columns=["file", "source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
 
     with pytest.raises(ValueError):

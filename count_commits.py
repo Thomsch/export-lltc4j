@@ -15,22 +15,24 @@ import argparse
 import os
 import pandas as pd
 
+
 def get_change_type(df: pd.DataFrame) -> str:
     """
     Returns the type of changes in the given dataframe.
     """
     if df.empty:
         return "empty"
-    elif all(df["group"] == "bugfix"):
+    if all(df["group"] == "bugfix"):
         return "bugfix"
-    elif all(df["group"] == "nonbugfix"):
+    if all(df["group"] == "nonbugfix"):
         return "nonbugfix"
-    elif df['group'].isin(['bugfix', 'nonbugfix']).sum() == len(df["group"]):
+    if df["group"].isin(["bugfix", "nonbugfix"]).sum() == len(df["group"]):
         return "mixed"
-    else:
-        raise ValueError(
-                        f"{df['group']} contains an unexpected value in the `group` column. Should be `bugfix` or `nonbugfix`."
-                    )
+
+    raise ValueError(
+        f"{df['group']} contains an unexpected value in the `group` column. Should be `bugfix` or `nonbugfix`."
+    )
+
 
 def count_commits(dir: str):
     """
@@ -61,7 +63,7 @@ def count_commits(dir: str):
                     non_bugfix_files += 1
                 elif change_type == "mixed":
                     mixed_changes_files += 1
-                
+
     print(f"Visited {total_files} truth.csv files")
     print(f"Found {empty_files} empty truth.csv files")
     print(f"Found {bugfix_files} files with only bugfix changes.")
