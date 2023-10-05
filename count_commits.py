@@ -2,7 +2,7 @@
 
 """
 This script counts the number of commits with only bug-fixing, non bug-fixing, or both changes in the LLTC4J dataset[1].
-The results are printed in stdout.
+The results are printed to stdout.
 
 References:
 1. Herbold, Steffen, et al. "A fine-grained data set and analysis of tangling in bug fixing commits." Empirical Software Engineering 27.6 (2022): 125.
