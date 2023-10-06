@@ -12,6 +12,7 @@ Arguments:
 """
 
 import argparse
+from collections import defaultdict
 import os
 import pandas as pd
 
@@ -41,35 +42,29 @@ def count_commits(dir: str):
     Arguments:
     - dir: Root directory where the CSV ground truth is.
     """
-
-    total_truth_files = 0
-    bugfix_files = 0
-    empty_files = 0
-    non_bugfix_files = 0
-    mixed_changes_files = 0
+    metrics = defaultdict(int)
     for root, _, files in os.walk(dir):
         for file in files:
             if file == "truth.csv":
-                total_truth_files += 1
+                metrics["total"] += 1
                 truth_file = os.path.join(root, file)
                 df = pd.read_csv(truth_file, header=0)
                 change_type = get_change_type(df)
 
                 if change_type == "empty":
-                    empty_files += 1
+                    metrics["empty"] += 1
                 elif change_type == "bugfix":
-                    bugfix_files += 1
+                    metrics["bugfix"] += 1
                 elif change_type == "nonbugfix":
-                    non_bugfix_files += 1
+                    metrics["nonbugfix"] += 1
                 elif change_type == "mixed":
-                    mixed_changes_files += 1
+                    metrics["mixed"] += 1
 
-    print(f"Visited {total_truth_files} truth.csv files")
-    print(f"Found {empty_files} empty truth.csv files")
-    print(f"Found {bugfix_files} files with only bugfix changes.")
-    print(f"Found {non_bugfix_files} files with only non-bugfix changes.")
-    print(f"Found {mixed_changes_files} files with both changes.")
-
+    print(f"Visited {metrics['total']} truth.csv files")
+    print(f"Found {metrics['empty']} empty truth.csv files")
+    print(f"Found {metrics['bugfix']} files with only bugfix changes.")
+    print(f"Found {metrics['nonbugfix']} files with only non-bugfix changes.")
+    print(f"Found {metrics['mixed']} files with both changes.")
 
 def main():
     """
