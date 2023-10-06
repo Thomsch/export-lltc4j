@@ -50,15 +50,7 @@ def count_commits(dir: str):
                 truth_file = os.path.join(root, file)
                 df = pd.read_csv(truth_file, header=0)
                 change_type = get_change_type(df)
-
-                if change_type == "empty":
-                    metrics["empty"] += 1
-                elif change_type == "bugfix":
-                    metrics["bugfix"] += 1
-                elif change_type == "nonbugfix":
-                    metrics["nonbugfix"] += 1
-                elif change_type == "mixed":
-                    metrics["mixed"] += 1
+                metrics[change_type] += 1
 
     print(f"Visited {metrics['total']} truth.csv files")
     print(f"Found {metrics['empty']} empty truth.csv files")
