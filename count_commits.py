@@ -2,7 +2,7 @@
 
 """
 This script counts the number of commits with only bug-fixing, non bug-fixing, or both changes in the LLTC4J dataset[1].
-The results are printed in stdout.
+The results are printed to stdout.
 
 References:
 1. Herbold, Steffen, et al. "A fine-grained data set and analysis of tangling in bug fixing commits." Empirical Software Engineering 27.6 (2022): 125.
@@ -12,6 +12,7 @@ Arguments:
 """
 
 import argparse
+from collections import defaultdict
 import os
 import pandas as pd
 
@@ -41,34 +42,21 @@ def count_commits(dir: str):
     Arguments:
     - dir: Root directory where the CSV ground truth is.
     """
-
-    total_files = 0
-    bugfix_files = 0
-    empty_files = 0
-    non_bugfix_files = 0
-    mixed_changes_files = 0
+    metrics = defaultdict(int)
     for root, _, files in os.walk(dir):
         for file in files:
             if file == "truth.csv":
-                total_files += 1
+                metrics["total"] += 1
                 truth_file = os.path.join(root, file)
                 df = pd.read_csv(truth_file, header=0)
                 change_type = get_change_type(df)
+                metrics[change_type] += 1
 
-                if change_type == "empty":
-                    empty_files += 1
-                elif change_type == "bugfix":
-                    bugfix_files += 1
-                elif change_type == "nonbugfix":
-                    non_bugfix_files += 1
-                elif change_type == "mixed":
-                    mixed_changes_files += 1
-
-    print(f"Visited {total_files} truth.csv files")
-    print(f"Found {empty_files} empty truth.csv files")
-    print(f"Found {bugfix_files} files with only bugfix changes.")
-    print(f"Found {non_bugfix_files} files with only non-bugfix changes.")
-    print(f"Found {mixed_changes_files} files with both changes.")
+    print(f"Visited {metrics['total']} truth.csv files")
+    print(f"Found {metrics['empty']} empty truth.csv files")
+    print(f"Found {metrics['bugfix']} files with only bugfix changes.")
+    print(f"Found {metrics['nonbugfix']} files with only non-bugfix changes.")
+    print(f"Found {metrics['mixed']} files with both changes.")
 
 
 def main():
