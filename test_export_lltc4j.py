@@ -71,7 +71,7 @@ def test_label_lines_modified_line():
     )
 
     expected_df = pd.DataFrame(
-        [(42, None, "bugfix"), (None, 42, "bugfix")],
+        [(42, None, "fix"), (None, 42, "fix")],
         columns=["source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
 
@@ -93,11 +93,11 @@ def test_label_lines_disjoint_labels():
 
     expected_df = pd.DataFrame(
         [
-            (42, None, "bugfix"),
-            (None, 42, "bugfix"),
-            (None, 44, "bugfix"),
-            (43, None, "nonbugfix"),
-            (None, 43, "nonbugfix"),
+            (42, None, "fix"),
+            (None, 42, "fix"),
+            (None, 44, "fix"),
+            (43, None, "other"),
+            (None, 43, "other"),
         ],
         columns=["source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
@@ -126,8 +126,8 @@ def test_label_lines_multiple_hunks():
 
     expected_df = pd.DataFrame(
         [
-            (7, None, "bugfix"),
-            (42, None, "bugfix"),
+            (7, None, "fix"),
+            (42, None, "fix"),
         ],
         columns=["source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
@@ -157,8 +157,8 @@ def test_label_lines_inter_hunk_start_change():
 
     expected_df = pd.DataFrame(
         [
-            (7, None, "bugfix"),
-            (None, 41, "bugfix"),
+            (7, None, "fix"),
+            (None, 41, "fix"),
         ],
         columns=["source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
@@ -191,10 +191,10 @@ def test_label_lines_exclude_non_code_changes():
 
     expected_df = pd.DataFrame(
         [
-            (None, 1, "nonbugfix"),
-            (None, 2, "nonbugfix"),
-            (None, 3, "bugfix"),
-            (None, 8, "nonbugfix"),
+            (None, 1, "other"),
+            (None, 2, "other"),
+            (None, 3, "fix"),
+            (None, 8, "other"),
         ],
         columns=["source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
