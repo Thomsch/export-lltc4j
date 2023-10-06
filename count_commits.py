@@ -58,6 +58,7 @@ def count_commits(dir: str):
     print(f"Found {metrics['nonbugfix']} files with only non-bugfix changes.")
     print(f"Found {metrics['mixed']} files with both changes.")
 
+
 def main():
     """
     Implement the logic of the script. See the module docstring.
