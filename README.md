@@ -38,4 +38,5 @@ pip install -r requirements.txt
 ```
 
 ## Usage
-See instructions in `export_lltc4j.py`
+1. Run `export_lltc4j.py --outdir <OUT_DIR>`.
+2. Run `update_commit_list.sh <OUT_DIR>/lltc4j-commits.csv`.

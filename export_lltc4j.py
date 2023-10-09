@@ -151,9 +151,9 @@ def label_lines(hunks: List[Hunk]) -> pd.DataFrame:
                     continue
 
                 if label in LINE_LABELS_CODE_FIX:
-                    group = "bugfix"
+                    group = "fix"
                 elif label in LINE_LABELS_CODE_NO_FIX:
-                    group = "nonbugfix"
+                    group = "other"
                 else:
                     group = label
 
