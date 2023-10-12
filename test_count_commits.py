@@ -21,12 +21,12 @@ def test_get_change_type_bugfix():
     """
     df = pd.DataFrame(
         [
-            ("file1", 7, None, "bugfix"),
-            ("file1", 42, None, "bugfix"),
+            ("file1", 7, None, "fix"),
+            ("file1", 42, None, "fix"),
         ],
         columns=["file", "source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
-    assert get_change_type(df) == "bugfix"
+    assert get_change_type(df) == "fix"
 
 
 def test_get_change_type_nonbugfix():
@@ -35,12 +35,12 @@ def test_get_change_type_nonbugfix():
     """
     df = pd.DataFrame(
         [
-            ("file1", None, 7, "nonbugfix"),
-            ("file1", None, 42, "nonbugfix"),
+            ("file1", None, 7, "other"),
+            ("file1", None, 42, "other"),
         ],
         columns=["file", "source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
-    assert get_change_type(df) == "nonbugfix"
+    assert get_change_type(df) == "other"
 
 
 def test_get_change_type_mixed():
@@ -49,8 +49,21 @@ def test_get_change_type_mixed():
     """
     df = pd.DataFrame(
         [
-            ("file1", 7, None, "bugfix"),
-            ("file1", None, 42, "nonbugfix"),
+            ("file1", 7, None, "fix"),
+            ("file1", None, 42, "other"),
+        ],
+        columns=["file", "source", "target", "group"],
+    ).astype({"source": "Int64", "target": "Int64"})
+    assert get_change_type(df) == "mixed"
+
+
+def test_get_change_type_both():
+    """
+    Test get_change_type() with a dataframe with mixed changes marked as 'both'.
+    """
+    df = pd.DataFrame(
+        [
+            ("file1", 7, None, "both"),
         ],
         columns=["file", "source", "target", "group"],
     ).astype({"source": "Int64", "target": "Int64"})
@@ -63,8 +76,8 @@ def test_get_change_type_unknown():
     """
     df = pd.DataFrame(
         [
-            ("file1", 7, None, "bugfix"),
-            ("file1", None, 42, "nonbugfix"),
+            ("file1", 7, None, "fix"),
+            ("file1", None, 42, "other"),
             ("file1", 7, None, "unknown"),
             ("file1", None, 42, "unknown"),
         ],

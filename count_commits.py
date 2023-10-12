@@ -19,21 +19,34 @@ import pandas as pd
 
 FIX_LABEL = "fix"
 OTHER_LABEL = "other"
-MIXED_LABEL = 'mixed'
+MIXED_LABEL = "mixed"
+
+# Legacy label added for retrocompatibility with the old ground truth CSVs.
+BOTH_LABEL = "both"
 
 
 def get_change_type(df: pd.DataFrame) -> str:
     """
     Returns the type of changes in the given dataframe.
+    If the types of changes in the 'group' column is unexpected, raises a ValueError.
     """
     if df.empty:
         return "empty"
-    if all(df["group"] == FIX_LABEL):
-        return FIX_LABEL
-    if all(df["group"] == OTHER_LABEL):
-        return OTHER_LABEL
-    if df["group"].isin([FIX_LABEL, OTHER_LABEL]).sum() == len(df["group"]):
-        return MIXED_LABEL
+
+    if df["group"].isin([BOTH_LABEL, FIX_LABEL, OTHER_LABEL]).sum() == len(df):
+        if all(df["group"] == FIX_LABEL):
+            return FIX_LABEL
+
+        if all(df["group"] == OTHER_LABEL):
+            return OTHER_LABEL
+
+        if (
+            df["group"].isin([BOTH_LABEL]).sum() > 0
+            or df["group"].isin([FIX_LABEL]).sum()
+            + df["group"].isin([OTHER_LABEL]).sum()
+            > 0
+        ):
+            return MIXED_LABEL
 
     raise ValueError(
         f"{df['group']} contains an unexpected value in the `group` column. Should be `{FIX_LABEL}` or `{OTHER_LABEL}`."
@@ -75,7 +88,7 @@ def main():
 
     main_parser.add_argument(
         "-d",
-        "--groundtruthdir",
+        "--directory",
         help="The directory storing the commit list and the ground truth CSVs.",
         metavar="PATH",
         required=True,
@@ -83,11 +96,11 @@ def main():
 
     args = main_parser.parse_args()
 
-    ground_truth_dir = os.path.realpath(args.groundtruthdir)
-    if not os.path.exists(args.groundtruthdir):
-        raise ValueError(f"Directory {ground_truth_dir} does not exist.")
+    root_dir = os.path.realpath(args.directory)
+    if not os.path.exists(args.directory):
+        raise ValueError(f"Directory {root_dir} does not exist.")
 
-    count_commits(ground_truth_dir)
+    count_commits(root_dir)
 
 
 if __name__ == "__main__":
