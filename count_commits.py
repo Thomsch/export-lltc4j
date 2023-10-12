@@ -2,6 +2,7 @@
 
 """
 This script counts the number of commits with only bug-fixing, non bug-fixing, or both changes in the LLTC4J dataset[1].
+The CSV is expected to have a `group` column with the values `fix` or `other` to indicate whether the commit is a bug-fixing commit or not.
 The results are printed to stdout.
 
 References:
@@ -16,6 +17,10 @@ from collections import defaultdict
 import os
 import pandas as pd
 
+FIX_LABEL = "fix"
+OTHER_LABEL = "other"
+MIXED_LABEL = 'mixed'
+
 
 def get_change_type(df: pd.DataFrame) -> str:
     """
@@ -23,15 +28,15 @@ def get_change_type(df: pd.DataFrame) -> str:
     """
     if df.empty:
         return "empty"
-    if all(df["group"] == "bugfix"):
-        return "bugfix"
-    if all(df["group"] == "nonbugfix"):
-        return "nonbugfix"
-    if df["group"].isin(["bugfix", "nonbugfix"]).sum() == len(df["group"]):
-        return "mixed"
+    if all(df["group"] == FIX_LABEL):
+        return FIX_LABEL
+    if all(df["group"] == OTHER_LABEL):
+        return OTHER_LABEL
+    if df["group"].isin([FIX_LABEL, OTHER_LABEL]).sum() == len(df["group"]):
+        return MIXED_LABEL
 
     raise ValueError(
-        f"{df['group']} contains an unexpected value in the `group` column. Should be `bugfix` or `nonbugfix`."
+        f"{df['group']} contains an unexpected value in the `group` column. Should be `{FIX_LABEL}` or `{OTHER_LABEL}`."
     )
 
 
@@ -54,9 +59,9 @@ def count_commits(dir: str):
 
     print(f"Visited {metrics['total']} truth.csv files")
     print(f"Found {metrics['empty']} empty truth.csv files")
-    print(f"Found {metrics['bugfix']} files with only bugfix changes.")
-    print(f"Found {metrics['nonbugfix']} files with only non-bugfix changes.")
-    print(f"Found {metrics['mixed']} files with both changes.")
+    print(f"Found {metrics[FIX_LABEL]} files with only bugfix changes.")
+    print(f"Found {metrics[OTHER_LABEL]} files with only non-bugfix changes.")
+    print(f"Found {metrics[MIXED_LABEL]} files with both changes.")
 
 
 def main():
