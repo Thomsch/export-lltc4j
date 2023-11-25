@@ -3,6 +3,7 @@ pycoshark
 mongoengine
 pandas
 tqdm
+defaultlist
 
 # Development dependencies
 pytest
