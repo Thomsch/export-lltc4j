@@ -11,12 +11,8 @@ References:
 
 from defaultlist import defaultlist
 import argparse
-import os
-import pandas as pd
-import sys
 from typing import List
 
-from mongoengine import connect
 from pycoshark.mongomodels import (
     Project,
     VCSSystem,
@@ -27,30 +23,64 @@ from pycoshark.mongomodels import (
 )
 
 from export_lltc4j import connect_to_db
-from export_lltc4j import PROJECTS
+from export_lltc4j import (
+    PROJECTS,
+    LINE_LABELS_CODE,
+    LINE_LABELS_CODE_FIX,
+    LINE_LABELS_CODE_NO_FIX,
+)
 
 
 def has_tangled_lines(hunks: List[Hunk], commit_hash: str) -> bool:
+    """
+    Returns true if the given hunks have at least one tangled line.
+
+    :param hunks: The hunks to check in the commit.
+    :param commit_hash: The hash of the commit.
+    """
     for hunk in hunks:
         hunk_content_by_line = hunk.content.splitlines()
         line_labels = defaultlist()
 
         for label, offset_line_numbers in hunk.lines_verified.items():
             for i in offset_line_numbers:
-                print(f"Line {i} has label {label}, content: {line_labels[i]}")
                 if line_labels[i]:
                     print(f"Tangled line in {commit_hash}: {hunk_content_by_line[i]}")
                     print(f"Found label {line_labels[i]} and {label}")
                     return True
                 else:
-                    line_labels[i] = label  
-        print()
+                    line_labels[i] = label
     return False
 
 
-def is_tangled(commit) -> bool:
+def has_tangled_hunks(hunks: List[Hunk], commit_hash: str) -> bool:
     """
-    Returns True if the given commit is tangled.
+    Returns true if the given hunks have at least one tangled hunk.
+
+    :param hunks: The hunks to check in the commit.
+    :param commit_hash: The hash of the commit.
+    """
+    for hunk in hunks:
+        # If hunk contains only bug fixing changes and non bug fixing changes, return false.
+        seen_labels = set()
+
+        for label, _ in hunk.lines_verified.items():
+            if label not in LINE_LABELS_CODE:
+                continue
+
+            if label in LINE_LABELS_CODE_FIX:
+                seen_labels.add("fix")
+            elif label in LINE_LABELS_CODE_NO_FIX:
+                seen_labels.add("nofix")
+
+            if len(seen_labels) == 2:
+                return True
+    return False
+
+
+def is_commit_tangled(commit, tangle_func) -> bool:
+    """
+    Returns True if the given commit is tangled acording to the given tangle function.
     """
     if (
         commit.labels is not None
@@ -77,23 +107,33 @@ def is_tangled(commit) -> bool:
             ):
                 continue
 
-            return has_tangled_lines(Hunk.objects(file_action_id=fa.id), commit.revision_hash)
+            return tangle_func(Hunk.objects(file_action_id=fa.id), commit.revision_hash)
     else:
         return False
-    
 
-def find_tangled_commits():
+
+def find_tangled_commits(tangle_granularity: str) -> List:
     """
-    Finds commits with tangled lines in the LLTC4J dataset.
+    Finds commits with tangled commits in the LLTC4J dataset. Returns a list of tuples
+    (project_name, commit_hash).
+
+    :param tangle_granularity: The granularity of the tangled changes to look for.
     """
+    tangle_func = None
+    if tangle_granularity == "hunk":
+        tangle_func = has_tangled_hunks
+    elif tangle_granularity == "line":
+        tangle_func = has_tangled_lines
+    else:
+        raise ValueError(f"Unknown tangle granularity: {tangle_granularity}")
+
+    connect_to_db()
 
     tangled_commits = []
-
     for project in Project.objects(name__in=PROJECTS):
-        print(f"Processing project {project.name}", file=sys.stderr)
         vcs_system = VCSSystem.objects(project_id=project.id).get()
         for commit in Commit.objects(vcs_system_id=vcs_system.id):
-            if is_tangled(commit):
+            if is_commit_tangled(commit, tangle_func):
                 tangled_commits.append((project.name, commit.revision_hash))
 
     return tangled_commits
@@ -104,8 +144,20 @@ def main():
     Implement the logic of the script. See the module docstring.
     """
 
-    connect_to_db()
-    tangled_commits = find_tangled_commits()
+    main_parser = argparse.ArgumentParser(
+        prog="list_tangled_commits.py",
+        description="List all commits in the LLTC4J dataset that are tangled.",
+    )
+
+    main_parser.add_argument(
+        "tangle_granularity",
+        choices=["hunk", "line"],
+        help="The untangling granularity.",
+    )
+
+    args = main_parser.parse_args()
+
+    tangled_commits = find_tangled_commits(args.tangle_granularity)
 
     for project, commit_hash in tangled_commits:
         print(f"{project} {commit_hash}")
