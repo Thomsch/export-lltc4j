@@ -139,7 +139,7 @@ def count_tangled_changes(commit, granularity_count_func) -> int:
 def list_tangled_commits(tangle_granularity: str) -> List:
     """
     List commits with tangled commits in the LLTC4J dataset. The commits are outputted
-    on the standard output in the format: <project_name> <commit_hash> <tangled_changes_count>.
+    on the standard output in CSV format with the following header: <project_name>,<commit_hash>,<tangled_changes_count>.
     The tangled changes count varies depending on the tangling granularity.
 
     :param tangle_granularity: The granularity of the tangled changes to look for.
@@ -154,7 +154,7 @@ def list_tangled_commits(tangle_granularity: str) -> List:
 
     connect_to_db()
 
-    tangled_commits = []
+    print("project,commit,tangled_changes_count")
     for project in Project.objects(name__in=PROJECTS):
         vcs_system = VCSSystem.objects(project_id=project.id).get()
         for commit in Commit.objects(vcs_system_id=vcs_system.id):
@@ -162,9 +162,7 @@ def list_tangled_commits(tangle_granularity: str) -> List:
                 commit, granularity_count_func
             )
             if tangled_changes_count:
-                print(f"{project.name} {commit.revision_hash} {tangled_changes_count}")
-
-    return tangled_commits
+                print(f"{project.name},{commit.revision_hash},{tangled_changes_count}")
 
 
 def main():
