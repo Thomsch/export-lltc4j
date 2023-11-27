@@ -9,10 +9,10 @@ References:
 1. Herbold, Steffen, et al. "A fine-grained data set and analysis of tangling in bug fixing commits." Empirical Software Engineering 27.6 (2022): 125.
 """
 
-from defaultlist import defaultlist
 import argparse
 from typing import List
 
+from defaultlist import defaultlist
 from pycoshark.mongomodels import (
     Project,
     VCSSystem,
@@ -48,8 +48,7 @@ def has_tangled_lines(hunks: List[Hunk], commit_hash: str) -> bool:
                     print(f"Tangled line in {commit_hash}: {hunk_content_by_line[i]}")
                     print(f"Found label {line_labels[i]} and {label}")
                     return True
-                else:
-                    line_labels[i] = label
+                line_labels[i] = label
     return False
 
 
@@ -78,6 +77,42 @@ def has_tangled_hunks(hunks: List[Hunk], commit_hash: str) -> bool:
     return False
 
 
+def is_java_file(file: File) -> bool:
+    """
+    Returns true if the given file is a Java file.
+    """
+    return file.path.endswith(".java")
+
+
+def is_test_file(file: File) -> bool:
+    """
+    Returns true if the given file is a Java test file.
+    """
+    return (
+        "test/" in file.path
+        or "tests/" in file.path
+        or file.path.endswith("Test.java")
+        or file.path.endswith("Tests.java")
+    )
+
+
+def get_changed_file(fa: FileAction) -> File:
+    """
+    Returns the changed file from the given file action.
+    If the file was renamed, the new file is returned. If the file was deleted,
+    the old file is returned.
+    """
+    if fa.file_id:
+        # If the file was renamed, prefer the new file instead of the old file.
+        # This behaviour is consistent with the unidiff library we use
+        # in our evaluation framework.
+        file = File.objects(id=fa.file_id).get()
+    else:
+        # If there is no file_id, the file was deleted. We use the old_file_id.
+        file = File.objects(id=fa.old_file_id).get()
+    return file
+
+
 def is_commit_tangled(commit, tangle_func) -> bool:
     """
     Returns True if the given commit is tangled acording to the given tangle function.
@@ -89,22 +124,9 @@ def is_commit_tangled(commit, tangle_func) -> bool:
         and len(commit.parents) == 1
     ):
         for fa in FileAction.objects(commit_id=commit.id):
-            file = None
+            file = get_changed_file(fa)
 
-            if fa.old_file_id:
-                file = File.objects(id=fa.old_file_id).get()
-
-            if not file or fa.mode == "R":
-                # If the file was renamed, prefer the new file instead of the old file.
-                # This behaviour is consistent with the unidiff library we use
-                # in our evaluation framework.
-                file = File.objects(id=fa.file_id).get()
-
-            if (
-                not file.path.endswith(".java")
-                or file.path.endswith("Test.java")
-                or "src/test" in file.path
-            ):
+            if not is_java_file(file) or is_test_file(file):
                 continue
 
             return tangle_func(Hunk.objects(file_action_id=fa.id), commit.revision_hash)
