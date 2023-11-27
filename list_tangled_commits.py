@@ -130,7 +130,9 @@ def count_tangled_changes(commit, granularity_count_func) -> int:
             file = get_changed_file(fa)
             if not is_java_file(file) or is_test_file(file):
                 continue
-            tangled_changes_count += granularity_count_func(Hunk.objects(file_action_id=fa.id), commit.revision_hash)
+            tangled_changes_count += granularity_count_func(
+                Hunk.objects(file_action_id=fa.id), commit.revision_hash
+            )
     return tangled_changes_count
 
 
@@ -156,7 +158,9 @@ def list_tangled_commits(tangle_granularity: str) -> List:
     for project in Project.objects(name__in=PROJECTS):
         vcs_system = VCSSystem.objects(project_id=project.id).get()
         for commit in Commit.objects(vcs_system_id=vcs_system.id):
-            tangled_changes_count = count_tangled_changes(commit, granularity_count_func)
+            tangled_changes_count = count_tangled_changes(
+                commit, granularity_count_func
+            )
             if tangled_changes_count:
                 print(f"{project.name} {commit.revision_hash} {tangled_changes_count}")
 
