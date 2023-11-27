@@ -31,13 +31,14 @@ from export_lltc4j import (
 )
 
 
-def has_tangled_lines(hunks: List[Hunk], commit_hash: str) -> bool:
+def count_tangled_lines(hunks: List[Hunk], commit_hash: str) -> int:
     """
-    Returns true if the given hunks have at least one tangled line.
+    Returns the count of tangled lines in the given hunk list.
 
     :param hunks: The hunks to check in the commit.
     :param commit_hash: The hash of the commit.
     """
+    tangled_lines_count = 0
     for hunk in hunks:
         hunk_content_by_line = hunk.content.splitlines()
         line_labels = defaultlist()
@@ -45,20 +46,21 @@ def has_tangled_lines(hunks: List[Hunk], commit_hash: str) -> bool:
         for label, offset_line_numbers in hunk.lines_verified.items():
             for i in offset_line_numbers:
                 if line_labels[i]:
+                    tangled_lines_count += 1
                     print(f"Tangled line in {commit_hash}: {hunk_content_by_line[i]}")
                     print(f"Found label {line_labels[i]} and {label}")
-                    return True
                 line_labels[i] = label
-    return False
+    return tangled_lines_count
 
 
-def has_tangled_hunks(hunks: List[Hunk], commit_hash: str) -> bool:
+def count_tangled_hunks(hunks: List[Hunk], commit_hash: str) -> int:
     """
-    Returns true if the given hunks have at least one tangled hunk.
+    Returns the count of tangled hunks in the given hunk list.
 
     :param hunks: The hunks to check in the commit.
     :param commit_hash: The hash of the commit.
     """
+    tangled_hunks_count = 0
     for hunk in hunks:
         # If hunk contains only bug fixing changes and non bug fixing changes, return false.
         seen_labels = set()
@@ -73,8 +75,8 @@ def has_tangled_hunks(hunks: List[Hunk], commit_hash: str) -> bool:
                 seen_labels.add("nofix")
 
             if len(seen_labels) == 2:
-                return True
-    return False
+                tangled_hunks_count += 1
+    return tangled_hunks_count
 
 
 def is_java_file(file: File) -> bool:
@@ -113,10 +115,11 @@ def get_changed_file(fa: FileAction) -> File:
     return file
 
 
-def is_commit_tangled(commit, tangle_func) -> bool:
+def count_tangled_changes(commit, granularity_count_func) -> int:
     """
-    Returns True if the given commit is tangled acording to the given tangle function.
+    Returns the count of tangled changes given the tangle function.
     """
+    tangled_changes_count = 0
     if (
         commit.labels is not None
         and "validated_bugfix" in commit.labels
@@ -125,27 +128,25 @@ def is_commit_tangled(commit, tangle_func) -> bool:
     ):
         for fa in FileAction.objects(commit_id=commit.id):
             file = get_changed_file(fa)
-
             if not is_java_file(file) or is_test_file(file):
                 continue
-
-            return tangle_func(Hunk.objects(file_action_id=fa.id), commit.revision_hash)
-    else:
-        return False
+            tangled_changes_count += granularity_count_func(Hunk.objects(file_action_id=fa.id), commit.revision_hash)
+    return tangled_changes_count
 
 
-def find_tangled_commits(tangle_granularity: str) -> List:
+def list_tangled_commits(tangle_granularity: str) -> List:
     """
-    Finds commits with tangled commits in the LLTC4J dataset. Returns a list of tuples
-    (project_name, commit_hash).
+    List commits with tangled commits in the LLTC4J dataset. The commits are outputted
+    on the standard output in the format: <project_name> <commit_hash> <tangled_changes_count>.
+    The tangled changes count varies depending on the tangling granularity.
 
     :param tangle_granularity: The granularity of the tangled changes to look for.
     """
-    tangle_func = None
+    granularity_count_func = None
     if tangle_granularity == "hunk":
-        tangle_func = has_tangled_hunks
+        granularity_count_func = count_tangled_hunks
     elif tangle_granularity == "line":
-        tangle_func = has_tangled_lines
+        granularity_count_func = count_tangled_lines
     else:
         raise ValueError(f"Unknown tangle granularity: {tangle_granularity}")
 
@@ -155,8 +156,9 @@ def find_tangled_commits(tangle_granularity: str) -> List:
     for project in Project.objects(name__in=PROJECTS):
         vcs_system = VCSSystem.objects(project_id=project.id).get()
         for commit in Commit.objects(vcs_system_id=vcs_system.id):
-            if is_commit_tangled(commit, tangle_func):
-                tangled_commits.append((project.name, commit.revision_hash))
+            tangled_changes_count = count_tangled_changes(commit, granularity_count_func)
+            if tangled_changes_count:
+                print(f"{project.name} {commit.revision_hash} {tangled_changes_count}")
 
     return tangled_commits
 
@@ -178,11 +180,7 @@ def main():
     )
 
     args = main_parser.parse_args()
-
-    tangled_commits = find_tangled_commits(args.tangle_granularity)
-
-    for project, commit_hash in tangled_commits:
-        print(f"{project} {commit_hash}")
+    list_tangled_commits(args.tangle_granularity)
 
 
 if __name__ == "__main__":
